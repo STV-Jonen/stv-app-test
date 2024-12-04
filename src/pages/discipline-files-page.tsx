@@ -1,6 +1,5 @@
 import { buttonVariants } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
-import { SignOutButton } from '@clerk/clerk-react'
 import { useMutation } from '@tanstack/react-query'
 import { Link, useParams } from '@tanstack/react-router'
 import { deleteObject, ref, uploadBytes } from 'firebase/storage'
@@ -11,7 +10,7 @@ import {
   MousePointerSquareDashedIcon,
   Trash2Icon,
 } from 'lucide-react'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import Dropzone, { FileRejection } from 'react-dropzone'
 import { BarLoader } from 'react-spinners'
 import { storage } from '../firebase'
