@@ -16,7 +16,11 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: App,
+  component: () => (
+    <ProtectedRoute>
+      <App />
+    </ProtectedRoute>
+  ),
 })
 
 const disciplineFilesRoute = createRoute({
