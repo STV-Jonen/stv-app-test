@@ -1,5 +1,6 @@
-import { buttonVariants } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
+import { useUser } from '@clerk/clerk-react'
 import { useMutation } from '@tanstack/react-query'
 import { Link, useParams } from '@tanstack/react-router'
 import { deleteObject, ref, uploadBytes } from 'firebase/storage'
@@ -17,9 +18,7 @@ import { storage } from '../firebase'
 import { useFilesInFolder } from '../hooks/useFilesInFolder'
 import { cn, isNotNullOrUndefined, isNullOrUndefined } from '../utils/utils'
 
-type Props = {}
-
-export const DisciplineFilesPage = ({}: Props) => {
+export const DisciplineFilesPage = () => {
   const { discipline, year } = useParams({
     from: '/disciplines/$year/$discipline/files',
   })
@@ -56,6 +55,8 @@ export const DisciplineFilesPage = ({}: Props) => {
     },
   })
 
+  const { user } = useUser()
+
   const onDropAccepted = async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0]
     setFile(file)
@@ -71,6 +72,8 @@ export const DisciplineFilesPage = ({}: Props) => {
       })
     }
   }
+
+  const roles = user?.publicMetadata.roles as string[]
 
   return (
     <div className="p-4">
@@ -89,86 +92,86 @@ export const DisciplineFilesPage = ({}: Props) => {
 
       <h1 className="text-3xl mb-4">{discipline}</h1>
 
-      <div className="py-4">
-        <div className="max-w-xs mb-4">
-          <div
-            className={cn(
-              'relative flex size-full flex-1 flex-col items-center justify-center rounded-md bg-gray-900/5 p-2 ring-1 ring-inset ring-gray-900/10 lg:rounded-2xl',
-              {
-                'bg-blue-900/10 ring-blue-900/25': isDragOver,
-              }
-            )}
-          >
-            <Dropzone
-              multiple={false}
-              onDropAccepted={onDropAccepted}
-              onDropRejected={onDropRejected}
-              onDragEnter={() => setIsDragOver(true)}
-              onDragLeave={() => setIsDragOver(false)}
+      {roles.includes('admin') ? (
+        <div className="py-4">
+          <div className="max-w-xs mb-4">
+            <div
+              className={cn(
+                'relative flex size-full flex-1 flex-col items-center justify-center rounded-md bg-gray-900/5 p-2 ring-1 ring-inset ring-gray-900/10 lg:rounded-2xl',
+                {
+                  'bg-blue-900/10 ring-blue-900/25': isDragOver,
+                }
+              )}
             >
-              {({ getRootProps, getInputProps }) => (
-                <div
-                  {...getRootProps()}
-                  className="flex size-full flex-1 flex-col items-center justify-center"
-                >
-                  <input {...getInputProps()} />
-                  {isDragOver ? (
-                    <MousePointerSquareDashedIcon className="mb-2 size-6 text-zinc-500" />
-                  ) : (
-                    <FileIcon className="mb-2 size-6 text-zinc-500" />
-                  )}
-                  <div className="mb-2 flex flex-col justify-center text-sm text-zinc-700">
+              <Dropzone
+                multiple={false}
+                onDropAccepted={onDropAccepted}
+                onDropRejected={onDropRejected}
+                onDragEnter={() => setIsDragOver(true)}
+                onDragLeave={() => setIsDragOver(false)}
+              >
+                {({ getRootProps, getInputProps }) => (
+                  <div
+                    {...getRootProps()}
+                    className="flex size-full flex-1 flex-col items-center justify-center"
+                  >
+                    <input {...getInputProps()} />
                     {isDragOver ? (
-                      <p>
-                        <span className="font-semibold">Datei ablegen</span> um
-                        hochzuladen
-                      </p>
+                      <MousePointerSquareDashedIcon className="mb-2 size-6 text-zinc-500" />
                     ) : (
-                      <p>
-                        <span className="font-semibold">
-                          Klicken um hochzuladen
-                        </span>{' '}
-                        oder drag and drop
-                      </p>
+                      <FileIcon className="mb-2 size-6 text-zinc-500" />
                     )}
-                  </div>
+                    <div className="mb-2 flex flex-col justify-center text-sm text-zinc-700">
+                      {isDragOver ? (
+                        <p>
+                          <span className="font-semibold">Datei ablegen</span>{' '}
+                          um hochzuladen
+                        </p>
+                      ) : (
+                        <p>
+                          <span className="font-semibold">
+                            Klicken um hochzuladen
+                          </span>{' '}
+                          oder drag and drop
+                        </p>
+                      )}
+                    </div>
 
-                  {false ? null : (
                     <p className="text-xs text-zinc-500">Max. 1</p>
-                  )}
-                </div>
-              )}
-            </Dropzone>
-          </div>
-          <div>
-            <div className="font-bold">Ausgewählte Datei</div>
+                  </div>
+                )}
+              </Dropzone>
+            </div>
             <div>
-              {isNullOrUndefined(file) ? (
-                <div>Keine Datei ausgewählt</div>
-              ) : (
-                <div className="flex gap-4 items-center">
-                  <div>{file.name}</div>
-                  <button onClick={() => setFile(null)}>
-                    <Trash2Icon className="size-4" />
-                  </button>
-                </div>
-              )}
+              <div className="font-bold">Ausgewählte Datei</div>
+              <div>
+                {isNullOrUndefined(file) ? (
+                  <div>Keine Datei ausgewählt</div>
+                ) : (
+                  <div className="flex gap-4 items-center">
+                    <div>{file.name}</div>
+                    <button onClick={() => setFile(null)}>
+                      <Trash2Icon className="size-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
+          <button
+            disabled={isNullOrUndefined(file) || isPending}
+            className={cn(
+              'bg-black hover:bg-gray-900 text-white px-4 py-2 rounded-md disabled:bg-gray-400'
+            )}
+            onClick={() => uploadFile()}
+          >
+            {isPending ? <BarLoader color="white" /> : 'Upload'}
+          </button>
         </div>
-        <button
-          disabled={isNullOrUndefined(file) || isPending}
-          className={cn(
-            'bg-black hover:bg-gray-900 text-white px-4 py-2 rounded-md disabled:bg-gray-400'
-          )}
-          onClick={() => uploadFile()}
-        >
-          {isPending ? <BarLoader color="white" /> : 'Upload'}
-        </button>
-      </div>
+      ) : null}
 
       <div className="font-bold">Dateien</div>
-      <div>
+      <div className="divide-y-2">
         {isFetching ? (
           <div>
             <BarLoader />
@@ -177,15 +180,27 @@ export const DisciplineFilesPage = ({}: Props) => {
           <>
             {isNotNullOrUndefined(files) && files.length > 0 ? (
               files.map((file) => (
-                <div key={file.name} className="flex items-center gap-4">
+                <div
+                  key={file.name}
+                  className="flex items-center gap-4 max-w-xs p-4 justify-between"
+                >
                   <div>{file.name}</div>
-                  <div className="flex items-center gap-2">
-                    <a href={file.url}>
+                  <div className="flex items-center gap-4">
+                    <a
+                      href={file.url}
+                      className={buttonVariants({ size: 'icon' })}
+                    >
                       <EyeIcon className="size-4" />
                     </a>
-                    <button onClick={() => deleteFile(file.name)}>
-                      <Trash2Icon className="size-4" />
-                    </button>
+                    {roles.includes('admin') ? (
+                      <Button
+                        onClick={() => deleteFile(file.name)}
+                        size="icon"
+                        variant="destructive"
+                      >
+                        <Trash2Icon className="size-4" />
+                      </Button>
+                    ) : null}
                   </div>
                 </div>
               ))

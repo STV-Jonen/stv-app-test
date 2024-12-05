@@ -8,6 +8,7 @@ import { App } from '../App'
 import { RootLayout } from '../layouts/root-layout'
 import { DisciplineFilesPage } from './discipline-files-page'
 import { LoginPage } from './login-page'
+import { ProfilePage } from './profile-page'
 
 const rootRoute = createRootRoute({
   component: RootLayout,
@@ -33,6 +34,16 @@ const disciplineFilesRoute = createRoute({
   ),
 })
 
+const profileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/profile',
+  component: () => (
+    <ProtectedRoute>
+      <ProfilePage />
+    </ProtectedRoute>
+  ),
+})
+
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
@@ -43,6 +54,7 @@ const routeTree = rootRoute.addChildren([
   indexRoute,
   disciplineFilesRoute,
   loginRoute,
+  profileRoute,
 ])
 
 export const router = createRouter({ routeTree })

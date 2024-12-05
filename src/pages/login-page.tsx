@@ -1,10 +1,8 @@
 import { SignIn } from '@clerk/clerk-react'
 
-type Props = {}
-
-export const LoginPage = ({}: Props) => {
+export const LoginPage = () => {
   return (
-    <div>
+    <div className="flex justify-center items-center min-h-dvh">
       <SignIn />
     </div>
   )
